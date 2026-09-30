@@ -1,7 +1,7 @@
+import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import type { OpenMktDatabase } from '@openmkt/database'
 import * as schema from '@openmkt/database/schema'
 import { betterAuth } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { openMktAuthDefaults } from './config.js'
 
 export interface CreateAuthInput {

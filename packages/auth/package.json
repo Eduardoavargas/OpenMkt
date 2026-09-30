@@ -12,9 +12,10 @@
     "test": "vitest run --passWithNoTests",
     "test:integration": "vitest run --passWithNoTests",
     "build": "tsdown src/index.ts --format esm --clean",
-    "auth:schema": "auth generate --config ./better-auth.config.ts --output ../database/src/schema/auth.ts --adapter drizzle --dialect postgresql -y"
+    "auth:schema": "auth generate --config ./better-auth.config.ts --output ../database/src/schema/auth.ts -y"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.6",
     "@openmkt/database": "workspace:*",
     "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
