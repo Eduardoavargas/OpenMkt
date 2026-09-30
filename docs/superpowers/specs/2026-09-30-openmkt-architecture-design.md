@@ -53,8 +53,9 @@ Read-only reporting is the first integration milestone, not the final product sc
 OpenMkt is explicitly designed to perform controlled mutations including:
 
 - create/edit/pause/resume campaigns;
-- create/edit ad groups and keywords;
-- add negative keywords;
+- create/edit campaign budgets and supported bidding configuration;
+- create/edit ad groups, ads/creatives, assets, keywords, and negative keywords;
+- create/edit targeting supported by the provider, including audiences/segments and other targeting dimensions when modeled safely;
 - create/edit audiences and provider-specific segments;
 - create/edit conversion actions;
 - configure account and campaign conversion goals;
@@ -62,6 +63,8 @@ OpenMkt is explicitly designed to perform controlled mutations including:
 - create/edit GTM tags, triggers, and variables;
 - create GTM versions and publish approved versions;
 - equivalent write capabilities for future providers when their APIs support them.
+
+“Create campaign” means producing the provider resources required for a usable campaign configuration, not merely creating an empty campaign object. The exact resource graph remains provider-specific and is assembled through typed capabilities/change plans.
 
 ### 2.5 Intent-level safety
 
@@ -311,6 +314,22 @@ interface AdsReportingCapability {
   getAdGroupPerformance(input): Promise<AdGroupPerformance[]>
 }
 
+interface AdsManagementCapability {
+  createCampaign(input)
+  updateCampaign(input)
+  setCampaignStatus(input)
+  createBudget(input)
+  updateBudget(input)
+  updateBidding(input)
+  createAdGroup(input)
+  updateAdGroup(input)
+  createAd(input)
+  updateAd(input)
+  createAsset(input)
+  attachAsset(input)
+  updateTargeting(input)
+}
+
 interface SearchAdsCapability {
   getSearchTerms(input): Promise<SearchTermPerformance[]>
   listKeywords(input): Promise<Keyword[]>
@@ -339,7 +358,7 @@ interface TagManagementCapability {
 }
 ```
 
-Write capabilities should also be narrow and semantic, not generic raw mutation endpoints.
+Write capabilities should be narrow and semantic, not generic raw mutation endpoints.
 
 Providers declare supported capabilities and, where useful, capability maturity such as `stable`, `beta`, or `alpha`.
 
@@ -348,14 +367,17 @@ Providers declare supported capabilities and, where useful, capability maturity 
 Google Ads:
 
 - account discovery;
-- campaigns;
+- campaigns and budgets;
 - campaign performance;
+- bidding configuration required by supported campaign flows;
 - ad groups;
+- ads/creatives and assets required by supported campaign flows;
+- targeting required by supported campaign flows;
 - search terms;
-- keywords;
+- keywords and negative keywords;
 - conversion actions;
-- audiences;
-- later controlled writes for the same domains.
+- audiences/segments;
+- controlled writes for those domains through the change engine.
 
 Google Analytics 4:
 
@@ -613,23 +635,37 @@ New campaigns should default to a non-serving/paused state when the provider sup
 
 Activation requires explicit user intent or a separately confirmed plan.
 
+A campaign change plan may include a provider-specific graph of dependent resources such as budget, campaign, bidding settings, ad groups, ads/creatives, assets, keywords, targeting, audiences, and conversion-goal associations. The user confirms the resulting plan rather than a sequence of opaque raw API calls.
+
 ### 14.3 Write examples
 
 Indicative semantic operations:
 
 ```text
+ads.create_budget
+ads.update_budget
 ads.create_campaign
 ads.update_campaign
 ads.pause_campaign
 ads.resume_campaign
+ads.update_bidding
+ads.update_targeting
+
 ads.create_ad_group
 ads.update_ad_group
+ads.create_ad
+ads.update_ad
+ads.create_asset
+ads.attach_asset
+
 ads.create_keyword
 ads.update_keyword
 ads.add_negative_keyword
 
 ads.create_audience
 ads.update_audience
+ads.create_segment
+ads.update_segment
 ads.attach_audience
 ads.exclude_audience
 
@@ -757,7 +793,9 @@ Potential plugin capabilities:
 - reusable campaign-audit skills;
 - analytics investigation skills;
 - account comparison workflows;
-- conversion/tag setup workflows;
+- campaign creation/editing workflows;
+- audience/segment workflows;
+- conversion/tag/goal setup workflows;
 - interactive MCP Apps for campaign creation preview;
 - audience builder;
 - conversion setup review;
@@ -848,6 +886,7 @@ Client SDKs may be evaluated separately for a more permissive license such as Ap
 - credential envelope handling;
 - error normalization;
 - change-plan diff/risk classification;
+- campaign dependency-plan construction;
 - idempotency where applicable;
 - MCP schemas/tool registration.
 
@@ -860,6 +899,7 @@ Client SDKs may be evaluated separately for a more permissive license such as Ap
 - response mapping;
 - error redaction;
 - mutation validation;
+- dependent-resource mutation ordering;
 - verification after write.
 
 ### Integration
@@ -924,8 +964,12 @@ Add E2E coverage as interactive provider connection and change-confirmation flow
 
 ### M3 — Google write
 
+- campaign budgets and supported bidding configuration;
 - campaign create/edit/pause/resume;
-- ad group/keyword operations needed by campaign creation;
+- ad groups;
+- ads/creatives and assets required by supported campaign flows;
+- targeting required by supported campaign flows;
+- keyword and negative-keyword operations;
 - audience/segment operations supported by Google APIs;
 - conversion actions;
 - conversion goals;
@@ -948,6 +992,7 @@ Add E2E coverage as interactive provider connection and change-confirmation flow
 - connect official plugin to existing OpenMkt MCP;
 - skills/workflows;
 - interactive write previews/confirmation surfaces where useful;
+- campaign/audience/conversion/tag/goal workflows;
 - prepare for public plugin distribution when the product is ready.
 
 ### Later
@@ -988,8 +1033,9 @@ The foundation implementation following this design should make it possible to p
 7. The same application service can be called from REST and MCP.
 8. A provider package can implement capabilities without placing provider-specific HTTP logic in the core.
 9. A semantic write can be represented as a change plan with diff, risk, confirmation requirement, verification, and audit lifecycle.
-10. The architecture can add Meta/TikTok providers without changing the Workspace/auth/core tenancy model.
-11. The Web application can later add an LLM-agent layer without bypassing the existing authorization/change-engine boundaries.
+10. A complete campaign creation flow can be represented as one user-facing change plan even when the provider requires multiple dependent resources.
+11. The architecture can add Meta/TikTok providers without changing the Workspace/auth/core tenancy model.
+12. The Web application can later add an LLM-agent layer without bypassing the existing authorization/change-engine boundaries.
 
 ## 27. Design decisions summary
 
@@ -1009,9 +1055,10 @@ Approved decisions:
 12. Provider connection OAuth is separate from user sign-in OAuth.
 13. MCP grants and API keys are workspace-scoped.
 14. OpenMkt is a control plane capable of reads and controlled writes.
-15. Writes flow through Plan -> Diff -> Confirm -> Execute -> Verify -> Audit.
-16. New campaigns default to paused/non-serving where supported unless explicit activation is approved.
-17. Default Cloud/MCP surfaces do not expose unrestricted query/mutate primitives.
-18. OSS remains fully useful; Cloud monetizes managed operation.
-19. The ChatGPT plugin will use the existing OpenMkt MCP server.
-20. The Web may later support user-provided LLM API connections for in-portal agent workflows, but this is outside the initial MVP.
+15. Campaign creation includes its required dependent resources through provider-specific change plans.
+16. Writes flow through Plan -> Diff -> Confirm -> Execute -> Verify -> Audit.
+17. New campaigns default to paused/non-serving where supported unless explicit activation is approved.
+18. Default Cloud/MCP surfaces do not expose unrestricted query/mutate primitives.
+19. OSS remains fully useful; Cloud monetizes managed operation.
+20. The ChatGPT plugin will use the existing OpenMkt MCP server.
+21. The Web may later support user-provided LLM API connections for in-portal agent workflows, but this is outside the initial MVP.
