@@ -1,0 +1,25 @@
+{
+  "name": "openmkt",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "build": "turbo run build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "eslint": "^10.10.0",
+    "turbo": "^2.11.2",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.70.1",
+    "@eslint/js": "^10.0.0"
+  }
+}
