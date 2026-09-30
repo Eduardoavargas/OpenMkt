@@ -1,28 +1,28 @@
 {
-  "name": "@openmkt/database",
+  "name": "@openmkt/auth",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint src test drizzle.config.ts --ignore-pattern src/schema/auth.ts",
+    "lint": "eslint src better-auth.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
-    "test:integration": "vitest run",
+    "test:integration": "vitest run --passWithNoTests",
     "build": "tsdown src/index.ts --format esm --clean",
-    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
-    "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts"
+    "auth:schema": "auth generate --config ./better-auth.config.ts --output ../database/src/schema/auth.ts --adapter drizzle --dialect postgresql -y"
   },
   "dependencies": {
+    "@openmkt/database": "workspace:*",
+    "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
     "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",
-    "drizzle-kit": "^0.31.11",
+    "auth": "^1.7.6",
     "tsdown": "^0.23.0",
     "vitest": "^5.0.2"
   }
