@@ -8,6 +8,22 @@ on:
 jobs:
   foundation:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: openmkt
+          POSTGRES_PASSWORD: openmkt
+          POSTGRES_DB: openmkt_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U openmkt -d openmkt_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://openmkt:openmkt@localhost:5432/openmkt_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,3 +37,4 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm build
+      - run: pnpm --filter @openmkt/database test:integration -- schema.integration.test.ts

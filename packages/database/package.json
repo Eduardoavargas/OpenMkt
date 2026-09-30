@@ -1,0 +1,16 @@
+{
+  "name": "@openmkt/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:integration": "vitest run"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5",
+    "vitest": "^5.0.2"
+  }
+}
