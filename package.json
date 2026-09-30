@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@12.6.0",
   "engines": {
     "node": ">=24 <25"
@@ -15,11 +16,11 @@
     "build": "turbo run build"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/node": "^24.0.0",
-    "eslint": "^10.10.0",
+    "eslint": "^9.39.1",
     "turbo": "^2.11.2",
     "typescript": "^7.0.2",
-    "typescript-eslint": "^8.70.1",
-    "@eslint/js": "^10.0.0"
+    "typescript-eslint": "^8.70.1"
   }
 }
