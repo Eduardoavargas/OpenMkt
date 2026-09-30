@@ -10,8 +10,8 @@
   "scripts": {
     "lint": "eslint src test drizzle.config.ts --ignore-pattern src/schema/auth.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run --passWithNoTests",
-    "test:integration": "vitest run",
+    "test": "vitest run --passWithNoTests --exclude \"**/*.integration.test.ts\"",
+    "test:integration": "vitest run --passWithNoTests",
     "build": "tsdown src/index.ts --format esm --clean",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts"
