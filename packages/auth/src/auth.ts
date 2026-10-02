@@ -2,26 +2,23 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import type { OpenMktDatabase } from '@openmkt/database'
 import * as schema from '@openmkt/database/schema'
 import { betterAuth } from 'better-auth'
-import { openMktAuthDefaults } from './config.js'
+import {
+  buildAuthOptions,
+  type BuildAuthOptionsInput,
+} from './options.js'
 
-export interface CreateAuthInput {
+export interface CreateAuthInput extends BuildAuthOptionsInput {
   db: OpenMktDatabase
-  baseURL: string
-  secret: string
-  trustedOrigins: string[]
 }
 
 export function createAuth(input: CreateAuthInput) {
   return betterAuth({
-    ...openMktAuthDefaults,
+    ...buildAuthOptions(input),
     database: drizzleAdapter(input.db, {
       provider: 'pg',
       schemaName: 'auth',
       schema,
     }),
-    baseURL: input.baseURL,
-    secret: input.secret,
-    trustedOrigins: input.trustedOrigins,
   })
 }
 

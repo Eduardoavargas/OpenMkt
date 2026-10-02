@@ -6,13 +6,16 @@
   "scripts": {
     "lint": "eslint src test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests --exclude \"**/*.integration.test.ts\"",
     "test:integration": "vitest run --passWithNoTests",
     "build": "tsdown src/index.ts --format esm --clean"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
-    "hono": "^4.13.10"
+    "@openmkt/auth": "workspace:*",
+    "@openmkt/database": "workspace:*",
+    "hono": "^4.13.10",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "tsdown": "^0.23.0",

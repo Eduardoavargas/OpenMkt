@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint src better-auth.config.ts",
+    "lint": "eslint src test better-auth.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "test:integration": "vitest run --passWithNoTests",
@@ -19,11 +19,11 @@
     "@openmkt/database": "workspace:*",
     "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
-    "pg": "^8.23.0"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "@types/pg": "^8.15.5",
-    "auth": "^1.7.6",
+    "@better-auth/cli": "^1.7.6",
+    "@types/pg": "^8.16.0",
     "tsdown": "^0.23.0",
     "vitest": "^5.0.2"
   }
