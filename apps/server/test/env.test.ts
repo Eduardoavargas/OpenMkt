@@ -18,8 +18,9 @@ describe('parseServerEnv', () => {
   })
 
   it('rejects missing required secrets', () => {
-    const { BETTER_AUTH_SECRET: _secret, ...withoutSecret } = baseEnv
-    expect(() => parseServerEnv(withoutSecret)).toThrow()
+    expect(() =>
+      parseServerEnv({ ...baseEnv, BETTER_AUTH_SECRET: undefined }),
+    ).toThrow()
   })
 
   it('rejects partial OAuth provider credentials', () => {
