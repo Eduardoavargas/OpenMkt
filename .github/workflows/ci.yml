@@ -42,6 +42,7 @@ jobs:
       - run: pnpm --filter @openmkt/database test:integration -- schema.integration.test.ts
       - run: pnpm --filter @openmkt/core test -- workspaces/service.test.ts
       - run: pnpm --filter @openmkt/database test:integration -- workspace-repository.integration.test.ts
+      - run: pnpm --filter @openmkt/core test -- audit/service.test.ts
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
