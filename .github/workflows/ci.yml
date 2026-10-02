@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: openmkt
+          POSTGRES_PASSWORD: openmkt
+          POSTGRES_DB: openmkt_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U openmkt -d openmkt_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://openmkt:openmkt@localhost:5432/openmkt_test
+      TEST_DATABASE_URL: postgresql://openmkt:openmkt@localhost:5432/openmkt_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @openmkt/auth auth:schema
+      - run: pnpm --filter @openmkt/database exec drizzle-kit generate --config=drizzle.config.ts --name=init
+      - run: pnpm --filter @openmkt/database db:migrate
+      - run: pnpm --filter @openmkt/server exec vitest run test/health.test.ts
+      - run: pnpm --filter @openmkt/server exec vitest run test/auth.integration.test.ts
+      - run: pnpm --filter @openmkt/database exec vitest run test/schema.integration.test.ts
+      - run: pnpm --filter @openmkt/core exec vitest run test/workspaces/service.test.ts
+      - run: pnpm --filter @openmkt/database exec vitest run test/workspace-repository.integration.test.ts
+      - run: pnpm --filter @openmkt/core exec vitest run test/audit/service.test.ts
+      - run: pnpm --filter @openmkt/database exec vitest run test/audit-repository.integration.test.ts
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Capture generated schema, migrations, and lockfile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: task2-generated
+          if-no-files-found: warn
+          path: |
+            packages/database/src/schema/auth.ts
+            packages/database/migrations
+            pnpm-lock.yaml

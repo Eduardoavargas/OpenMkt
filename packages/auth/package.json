@@ -1,0 +1,30 @@
+{
+  "name": "@openmkt/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src test better-auth.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run --passWithNoTests",
+    "build": "tsdown src/index.ts --format esm --clean",
+    "auth:schema": "auth generate --config ./better-auth.config.ts --output ../database/src/schema/auth.ts -y"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.6",
+    "@openmkt/database": "workspace:*",
+    "better-auth": "^1.7.6",
+    "drizzle-orm": "^0.45.3",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "auth": "^1.7.6",
+    "@types/pg": "^8.16.0",
+    "tsdown": "^0.23.0",
+    "vitest": "^5.0.2"
+  }
+}
