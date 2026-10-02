@@ -11,8 +11,8 @@ const auth = createAuth({
   baseURL: env.betterAuthUrl,
   secret: env.betterAuthSecret,
   trustedOrigins: [env.appOrigin],
-  google: env.google,
-  github: env.github,
+  ...(env.google ? { google: env.google } : {}),
+  ...(env.github ? { github: env.github } : {}),
 })
 const app = createApp({ auth, appOrigin: env.appOrigin })
 
