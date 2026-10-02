@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import type { AuditRecorder } from '../audit/types.js'
 import { InvalidWorkspaceError, WorkspaceNotFoundError } from './errors.js'
 import type {
   UserPrincipal,
@@ -11,7 +12,10 @@ import type {
 const normalizedSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export class WorkspaceService {
-  constructor(private readonly repository: WorkspaceRepository) {}
+  constructor(
+    private readonly repository: WorkspaceRepository,
+    private readonly audit: AuditRecorder,
+  ) {}
 
   async createWorkspace(input: {
     principal: UserPrincipal
@@ -28,7 +32,7 @@ export class WorkspaceService {
       throw new InvalidWorkspaceError('Workspace slug must be normalized')
     }
 
-    return this.repository.createWithOwner({
+    const workspace = await this.repository.createWithOwner({
       workspace: {
         id: randomUUID(),
         name,
@@ -36,6 +40,20 @@ export class WorkspaceService {
       },
       ownerUserId: input.principal.userId,
     })
+
+    await this.audit.record({
+      workspaceId: workspace.id,
+      actor: {
+        type: 'user',
+        id: input.principal.userId,
+      },
+      action: 'workspace.created',
+      resourceType: 'workspace',
+      resourceId: workspace.id,
+      metadata: {},
+    })
+
+    return workspace
   }
 
   listWorkspaces(principal: UserPrincipal): Promise<WorkspaceSummary[]> {

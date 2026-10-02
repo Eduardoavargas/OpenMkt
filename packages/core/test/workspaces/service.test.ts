@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   WorkspaceNotFoundError,
   WorkspaceService,
+  type AuditRecorder,
   type WorkspaceRepository,
 } from '../../src/index.js'
 
@@ -13,13 +14,20 @@ function createRepository(): WorkspaceRepository {
   }
 }
 
+function createAudit(): AuditRecorder {
+  return {
+    record: vi.fn(),
+  }
+}
+
 describe('WorkspaceService', () => {
-  it('creates a workspace through the owner-specific repository operation', async () => {
+  it('creates a workspace through the owner-specific repository operation and audits it', async () => {
     const repository = createRepository()
+    const audit = createAudit()
     vi.mocked(repository.createWithOwner).mockImplementation(async (input) => ({
       ...input.workspace,
     }))
-    const service = new WorkspaceService(repository)
+    const service = new WorkspaceService(repository, audit)
 
     const workspace = await service.createWorkspace({
       principal: { type: 'user', userId: '00000000-0000-4000-8000-000000000001' },
@@ -36,13 +44,42 @@ describe('WorkspaceService', () => {
       },
       ownerUserId: '00000000-0000-4000-8000-000000000001',
     })
+    expect(audit.record).toHaveBeenCalledWith({
+      workspaceId: workspace.id,
+      actor: {
+        type: 'user',
+        id: '00000000-0000-4000-8000-000000000001',
+      },
+      action: 'workspace.created',
+      resourceType: 'workspace',
+      resourceId: workspace.id,
+      metadata: {},
+    })
     expect(workspace.slug).toBe('itscred')
+  })
+
+  it('does not audit a workspace that failed to persist', async () => {
+    const repository = createRepository()
+    const audit = createAudit()
+    vi.mocked(repository.createWithOwner).mockRejectedValue(new Error('db failed'))
+    const service = new WorkspaceService(repository, audit)
+
+    await expect(
+      service.createWorkspace({
+        principal: { type: 'user', userId: '00000000-0000-4000-8000-000000000001' },
+        name: 'Itscred',
+        slug: 'itscred',
+      }),
+    ).rejects.toThrow('db failed')
+
+    expect(audit.record).not.toHaveBeenCalled()
   })
 
   it('lists only through the current user scope', async () => {
     const repository = createRepository()
+    const audit = createAudit()
     vi.mocked(repository.listForUser).mockResolvedValue([])
-    const service = new WorkspaceService(repository)
+    const service = new WorkspaceService(repository, audit)
 
     await service.listWorkspaces({
       type: 'user',
@@ -54,24 +91,22 @@ describe('WorkspaceService', () => {
     )
   })
 
-  it.each([null])(
-    'returns the same not-found error for nonexistent and inaccessible workspaces',
-    async (membership) => {
-      const repository = createRepository()
-      vi.mocked(repository.findMembership).mockResolvedValue(membership)
-      const service = new WorkspaceService(repository)
+  it('returns the same not-found error for nonexistent and inaccessible workspaces', async () => {
+    const repository = createRepository()
+    const audit = createAudit()
+    vi.mocked(repository.findMembership).mockResolvedValue(null)
+    const service = new WorkspaceService(repository, audit)
 
-      await expect(
-        service.requireMembership({
-          principal: {
-            type: 'user',
-            userId: '00000000-0000-4000-8000-000000000003',
-          },
-          workspaceId: '00000000-0000-4000-8000-000000000099',
-        }),
-      ).rejects.toEqual(new WorkspaceNotFoundError())
-    },
-  )
+    await expect(
+      service.requireMembership({
+        principal: {
+          type: 'user',
+          userId: '00000000-0000-4000-8000-000000000003',
+        },
+        workspaceId: '00000000-0000-4000-8000-000000000099',
+      }),
+    ).rejects.toEqual(new WorkspaceNotFoundError())
+  })
 
   it.each([
     { name: '   ', slug: 'valid-slug' },
@@ -79,7 +114,8 @@ describe('WorkspaceService', () => {
     { name: 'Workspace', slug: 'not normalized' },
   ])('rejects invalid workspace input %#', async (input) => {
     const repository = createRepository()
-    const service = new WorkspaceService(repository)
+    const audit = createAudit()
+    const service = new WorkspaceService(repository, audit)
 
     await expect(
       service.createWorkspace({
@@ -88,5 +124,6 @@ describe('WorkspaceService', () => {
       }),
     ).rejects.toThrow()
     expect(repository.createWithOwner).not.toHaveBeenCalled()
+    expect(audit.record).not.toHaveBeenCalled()
   })
 })

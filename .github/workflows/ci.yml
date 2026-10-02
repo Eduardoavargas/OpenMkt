@@ -37,12 +37,13 @@ jobs:
       - run: pnpm --filter @openmkt/auth auth:schema
       - run: pnpm --filter @openmkt/database exec drizzle-kit generate --config=drizzle.config.ts --name=init
       - run: pnpm --filter @openmkt/database db:migrate
-      - run: pnpm --filter @openmkt/server test -- health.test.ts
-      - run: pnpm --filter @openmkt/server test:integration -- auth.integration.test.ts
-      - run: pnpm --filter @openmkt/database test:integration -- schema.integration.test.ts
-      - run: pnpm --filter @openmkt/core test -- workspaces/service.test.ts
-      - run: pnpm --filter @openmkt/database test:integration -- workspace-repository.integration.test.ts
-      - run: pnpm --filter @openmkt/core test -- audit/service.test.ts
+      - run: pnpm --filter @openmkt/server exec vitest run test/health.test.ts
+      - run: pnpm --filter @openmkt/server exec vitest run test/auth.integration.test.ts
+      - run: pnpm --filter @openmkt/database exec vitest run test/schema.integration.test.ts
+      - run: pnpm --filter @openmkt/core exec vitest run test/workspaces/service.test.ts
+      - run: pnpm --filter @openmkt/database exec vitest run test/workspace-repository.integration.test.ts
+      - run: pnpm --filter @openmkt/core exec vitest run test/audit/service.test.ts
+      - run: pnpm --filter @openmkt/database exec vitest run test/audit-repository.integration.test.ts
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
