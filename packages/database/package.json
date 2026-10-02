@@ -17,6 +17,7 @@
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts"
   },
   "dependencies": {
+    "@openmkt/core": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "pg": "^8.23.0"
   },
