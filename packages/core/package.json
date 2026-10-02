@@ -1,0 +1,19 @@
+{
+  "name": "@openmkt/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src test",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "build": "tsdown src/index.ts --format esm --clean"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.0",
+    "vitest": "^5.0.2"
+  }
+}
